@@ -1,28 +1,24 @@
-"""
-Module to create and print a simple grid map with artifact locations.
-
-Constants:
-- ROWS, COLS: Dimensions of the map grid.
-- artifact_coords: Coordinates of artifact rooms marked with 'A'.
-
-Functions:
-- generate_map_grid(): Returns a 2D list representing the map grid.
-- print_map(grid): Prints the map grid to the console.
-"""
+# Constants
 
 ROWS = 5
 COLS = 11
 
-# Coordinates of artifact rooms
 artifact_coords = [
-    (1, 3),
-    (2, 2), (2, 3), (2, 4),
-    (3, 1),
+    # Left A
+    (1, 3), (2, 2), (2, 3), (2, 4), (3, 1),
+    # Shared middle
     (3, 5),
-    (1, 7),
-    (2, 6), (2, 7), (2, 8),
-    (3, 9)
+    # Right A
+    (1, 7), (2, 6), (2, 7), (2, 8), (3, 9)
 ]
+
+artifact_names = [
+    "A - Left Top", "A - Left Mid Left", "A - Left Mid Mid", "A - Left Mid Right", "A - Left Bottom",
+    "Shared Artifact",
+    "A - Right Top", "A - Right Mid Left", "A - Right Mid Mid", "A - Right Mid Right", "A - Right Bottom"
+]
+
+player_start_coords = (0, 0)
 
 def generate_map_grid():
     """

@@ -1,90 +1,75 @@
+# Map Building and Helper Functions
+
 from classes import Room, Map
+from typing import Tuple, List
+from map import artifact_coords, artifact_names, player_start_coords
+import random
 
-# Your artifact coordinates and names in order
-artifact_coords = [
-    # Left A
-    (1, 3), (2, 2), (2, 3), (2, 4), (3, 1),
-
-    # Shared middle
-    (3, 5),
-
-    # Right A
-    (1, 7), (2, 6), (2, 7), (2, 8), (3, 9)
-]
-
-artifact_names = [
-    "A - Left Top",
-    "A - Left Mid Left",
-    "A - Left Mid Mid",
-    "A - Left Mid Right",
-    "A - Left Bottom",
-
-    "Shared Artifact",
-
-    "A - Right Top",
-    "A - Right Mid Left",
-    "A - Right Mid Mid",
-    "A - Right Mid Right",
-    "A - Right Bottom"
-]
-
-def build_game_map():
-    rows, cols = 5, 11
-    game_map = Map(rows, cols)
-
-    # Create all rooms
+def create_rooms(map_instance: Map, rows: int, cols: int) -> None:
     for r in range(rows):
         for c in range(cols):
             room = Room(r, c, description=f"Room at ({r},{c})")
-            game_map.add_room(room)
+            map_instance.add_room(room)
 
-    # Add artifacts to designated rooms
-    for coord, name in zip(artifact_coords, artifact_names):
+def add_artifacts(map_instance: Map, coords: List[Tuple[int, int]], names: List[str]) -> None:
+    for coord, name in zip(coords, names):
         row, col = coord
-        room = game_map.get_room(row, col)
+        room = map_instance.get_room(row, col)
         if room:
             room.artifact = name
             room.description += f" This room holds the artifact: {name}."
-            room.is_artifact_room = True  # Flag to identify artifact rooms
+            room.is_artifact_room = True
 
-    # Connect adjacent rooms (N, S, E, W)
+def assign_hint_and_nonsense_rooms(map_instance: Map, hint_count=10, nonsense_count=10) -> Tuple[List[Room], List[Room]]:
+    all_rooms = [room for room in map_instance.rooms.values() if not room.is_artifact_room]
+    random.shuffle(all_rooms)
+    hint_rooms = all_rooms[:hint_count]
+    nonsense_rooms = all_rooms[hint_count:hint_count + nonsense_count]
+
+    for room in hint_rooms:
+        room.is_hint_room = True
+        room.description += " A strange feeling washes over you... Something important is nearby."
+
+    for room in nonsense_rooms:
+        room.is_nonsense_room = True
+        room.description += " Your senses distort... None of this feels real."
+
+    return hint_rooms, nonsense_rooms
+
+
+def connect_rooms(map_instance: Map, rows: int, cols: int) -> None:
     for r in range(rows):
         for c in range(cols):
-            room = game_map.get_room(r, c)
+            room = map_instance.get_room(r, c)
             if not room:
                 continue
+            directions = {
+                'north': (r - 1, c),
+                'east': (r, c + 1),
+                'south': (r + 1, c),
+                'west': (r, c - 1),
+            }
+            for direction, (nr, nc) in directions.items():
+                neighbor = map_instance.get_room(nr, nc)
+                if neighbor:
+                    map_instance.connect_rooms(room, direction, neighbor)
 
-            # North
-            north_room = game_map.get_room(r - 1, c)
-            if north_room:
-                game_map.connect_rooms(room, 'north', north_room)
+def build_game_map() -> Tuple[Map, List[Tuple[int, int]], List[Room], List[Room]]:
+    rows, cols = 5, 11
+    map_instance = Map(rows, cols)
 
-            # East
-            east_room = game_map.get_room(r, c + 1)
-            if east_room:
-                game_map.connect_rooms(room, 'east', east_room)
+    create_rooms(map_instance, rows, cols)
+    add_artifacts(map_instance, artifact_coords, artifact_names)
+    hint_rooms, nonsense_rooms = assign_hint_and_nonsense_rooms(map_instance)
 
-            # South
-            south_room = game_map.get_room(r + 1, c)
-            if south_room:
-                game_map.connect_rooms(room, 'south', south_room)
+    connect_rooms(map_instance, rows, cols)
 
-            # West
-            west_room = game_map.get_room(r, c - 1)
-            if west_room:
-                game_map.connect_rooms(room, 'west', west_room)
+    return map_instance, artifact_coords, hint_rooms, nonsense_rooms
 
-    return game_map
-
-
-def list_artifact_rooms(game_map):
-    """
-    Return a list of tuples (row, col, artifact_name) for all artifact rooms in the map.
-    """
-    artifacts = []
-    for r in range(game_map.rows):
-        for c in range(game_map.cols):
-            room = game_map.get_room(r, c)
-            if room and room.is_artifact_room:
-                artifacts.append((r, c, room.artifact))
-    return artifacts
+if __name__ == "__main__":
+    game_map, artifacts, hints, nonsense = build_game_map()
+    total_rooms = len(game_map.rooms) * len(game_map.rooms[0])
+    print(f"Map with {total_rooms} rooms built.")
+    print(f"Artifacts placed: {len(artifacts)}")
+    print(f"Hint rooms assigned: {len(hints)}")
+    print(f"Nonsense rooms assigned: {len(nonsense)}")

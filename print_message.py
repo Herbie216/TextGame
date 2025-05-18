@@ -1,26 +1,25 @@
-# print_message.py
+# Alot of work to do here now that the player moves around!!!
 
-def print_map(game_map):
-    """
-    Print the game map with '.' for normal rooms and 'A' for artifact rooms.
-    """
+def print_map(game_map, player):
     for r in range(game_map.rows):
         row_display = ""
         for c in range(game_map.cols):
-            room = game_map.get_room(r, c)
-            if room is None:
-                row_display += "  "  # no room here
-            elif room.is_artifact_room:
-                row_display += " A"
+            if r == player.row and c == player.col:
+                row_display += f"{player.initial} "
             else:
-                row_display += " ."
-        print(row_display)
+                room = game_map.get_room(r, c)
+                if room.is_artifact_room and room.discovered:
+                    row_display += "* "
+                else:
+                    row_display += ". "
+        print(row_display.strip())
+    print()
 
 def print_welcome():
     """
     Print the welcome message at the start of the game.
     """
-    print("Welcome to the Text Adventure Game!")
+    print("Welcome to A Hint from the Past!")
 
 def print_room_description(room):
     """
@@ -31,6 +30,7 @@ def print_room_description(room):
 def print_artifacts_list(game_map):
     """
     Print a list of all artifact rooms and their coordinates.
+    Used for getting started, Maybe rework it later
     """
     artifacts = []
     for r in range(game_map.rows):
@@ -45,12 +45,14 @@ def print_artifacts_list(game_map):
 def text_to_binary(text):
     """
     Convert a string of text to a string of binary codes separated by spaces.
+    (Trying something)
     """
     return ' '.join(format(ord(c), '08b') for c in text)
 
 def print_binary_hint(hint_text):
     """
     Print a hint as a binary encoded string.
+    (Trying something)
     """
     binary_hint = text_to_binary(hint_text)
     print(f"Binary hint: {binary_hint}")
@@ -58,6 +60,7 @@ def print_binary_hint(hint_text):
 def interact_with_player():
     """
     Interact with the player, giving a binary hint and responding based on input.
+    (Trying something)
     """
     print_binary_hint("You are close. Try going right.")
     while True:
